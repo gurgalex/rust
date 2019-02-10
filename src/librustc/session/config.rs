@@ -2614,7 +2614,7 @@ mod tests {
             };
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, cfg) = build_session_options_and_crate_config(matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             let cfg = build_configuration(&sess, cfg);
             assert!(cfg.contains(&(Symbol::intern("test"), None)));
         });
@@ -2632,7 +2632,7 @@ mod tests {
             };
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, cfg) = build_session_options_and_crate_config(matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             let cfg = build_configuration(&sess, cfg);
             let mut test_items = cfg.iter().filter(|&&(name, _)| name == "test");
             assert!(test_items.next().is_some());
@@ -2646,7 +2646,7 @@ mod tests {
             let matches = optgroups().parse(&["-Awarnings".to_string()]).unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(!sess.diagnostic().flags.can_emit_warnings);
         });
 
@@ -2656,7 +2656,7 @@ mod tests {
                 .unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(sess.diagnostic().flags.can_emit_warnings);
         });
 
@@ -2664,7 +2664,7 @@ mod tests {
             let matches = optgroups().parse(&["-Adead_code".to_string()]).unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(sess.diagnostic().flags.can_emit_warnings);
         });
     }

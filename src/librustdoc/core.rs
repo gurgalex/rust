@@ -404,7 +404,7 @@ pub fn run_core(options: RustdocOptions) -> (clean::Crate, RenderInfo, RenderOpt
                                              debugging_options.ui_testing);
 
         let mut sess = session::build_session_(
-            sessopts, cpath, diagnostic_handler, source_map,
+            sessopts, None, cpath, diagnostic_handler, source_map,
         );
 
         lint::builtin::HardwiredLints.get_lints()

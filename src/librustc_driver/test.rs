@@ -109,6 +109,7 @@ fn test_env_with_pool<F>(
     let sess = session::build_session_(
         options,
         None,
+        None,
         diagnostic_handler,
         Lrc::new(SourceMap::new(FilePathMapping::empty())),
     );
