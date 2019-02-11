@@ -465,11 +465,8 @@ fn run_compiler_with_pool<'a>(
         }
     }}
 
-    let self_profiling_active = sopts.debugging_opts.self_profile ||
-                                sopts.debugging_opts.profile_json;
-
     let profiler =
-        if self_profiling_active { Some(Arc::new(PlMutex::new(SelfProfiler::new()))) }
+        if sopts.debugging_opts.self_profile { Some(Arc::new(PlMutex::new(SelfProfiler::new()))) }
         else { None };
 
     let descriptions = diagnostics_registry();
@@ -550,14 +547,10 @@ fn run_compiler_with_pool<'a>(
     match profiler {
         None => { },
         Some(profiler) => {
-            let mut profiler = profiler.lock();
+            let profiler = profiler.lock();
 
             if sess.opts.debugging_opts.self_profile {
-                profiler.print_results(&sess.opts);
-            }
-
-            if sess.opts.debugging_opts.profile_json {
-                profiler.save_results(&sess.opts);
+                profiler.dump_raw_events(&sess.opts);
             }
         }
     }
