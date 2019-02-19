@@ -187,7 +187,12 @@ impl SelfProfiler {
         let filename =
             format!("{}.profile_events.json", opts.crate_name.clone().unwrap_or_default());
 
-        let mut file = BufWriter::new(fs::File::create(filename).unwrap());
+        let mut file =
+            if let Ok(file) = fs::File::create(filename) {
+                BufWriter::new(file)
+            } else {
+                return;
+            };
 
         let threads: Vec<_> =
             self.events
