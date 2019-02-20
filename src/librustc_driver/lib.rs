@@ -22,6 +22,7 @@ extern crate graphviz;
 extern crate env_logger;
 #[cfg(unix)]
 extern crate libc;
+extern crate parking_lot;
 extern crate rustc_rayon as rayon;
 extern crate rustc;
 extern crate rustc_allocator;
@@ -64,6 +65,7 @@ use rustc::session::config::{Input, PrintRequest, ErrorOutputType};
 use rustc::session::config::nightly_options;
 use rustc::session::filesearch;
 use rustc::session::{early_error, early_warn};
+use rustc::util::profiling::{SelfProfiler};
 use rustc::lint::Lint;
 use rustc::lint;
 use rustc_metadata::locator;
@@ -90,7 +92,7 @@ use std::path::{PathBuf, Path};
 use std::process::{self, Command, Stdio};
 use std::str;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Once, ONCE_INIT};
+use std::sync::{Arc, Once, ONCE_INIT};
 use std::thread;
 
 use syntax::ast;
@@ -98,6 +100,8 @@ use syntax::source_map::{SourceMap, FileLoader, RealFileLoader};
 use syntax::feature_gate::{GatedCfg, UnstableFeatures};
 use syntax::parse::{self, PResult};
 use syntax_pos::{DUMMY_SP, MultiSpan, FileName};
+
+use parking_lot::Mutex as PlMutex;
 
 #[cfg(test)]
 mod test;
@@ -461,6 +465,10 @@ fn run_compiler_with_pool<'a>(
         }
     }}
 
+    let profiler =
+        if sopts.debugging_opts.self_profile { Some(Arc::new(PlMutex::new(SelfProfiler::new()))) }
+        else { None };
+
     let descriptions = diagnostics_registry();
 
     do_or_return!(callbacks.early_callback(&matches,
@@ -485,7 +493,12 @@ fn run_compiler_with_pool<'a>(
     let loader = file_loader.unwrap_or(box RealFileLoader);
     let source_map = Lrc::new(SourceMap::with_file_loader(loader, sopts.file_path_mapping()));
     let mut sess = session::build_session_with_source_map(
-        sopts, input_file_path.clone(), descriptions, source_map, emitter_dest,
+        sopts,
+        profiler.clone(),
+        input_file_path.clone(),
+        descriptions,
+        source_map,
+        emitter_dest,
     );
 
     if let Some(err) = input_err {
@@ -530,6 +543,17 @@ fn run_compiler_with_pool<'a>(
                               Some(plugins),
                               &control)
     };
+
+    match profiler {
+        None => { },
+        Some(profiler) => {
+            let profiler = profiler.lock();
+
+            if sess.opts.debugging_opts.self_profile {
+                profiler.dump_raw_events(&sess.opts);
+            }
+        }
+    }
 
     (result, Some(sess))
 }
@@ -810,6 +834,7 @@ impl<'a> CompilerCalls<'a> for RustcDefaultCalls {
         match matches.free.len() {
             0 => {
                 let mut sess = build_session(sopts.clone(),
+                    None,
                     None,
                     descriptions.clone());
                 if sopts.describe_lints {

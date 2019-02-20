@@ -70,7 +70,7 @@ pub fn run(mut options: Options) -> isize {
                                             Some(source_map.clone()));
 
         let mut sess = session::build_session_(
-            sessopts, Some(options.input), handler, source_map.clone(),
+            sessopts, None,  Some(options.input), handler, source_map.clone(),
         );
         let codegen_backend = rustc_driver::get_codegen_backend(&sess);
         let cstore = CStore::new(codegen_backend.metadata_loader());
@@ -274,7 +274,7 @@ fn run_test(test: &str, cratename: &str, filename: &FileName, line: usize,
         let diagnostic_handler = errors::Handler::with_emitter(true, false, box emitter);
 
         let mut sess = session::build_session_(
-            sessopts, None, diagnostic_handler, source_map,
+            sessopts, None, None, diagnostic_handler, source_map,
         );
         let codegen_backend = rustc_driver::get_codegen_backend(&sess);
         let cstore = CStore::new(codegen_backend.metadata_loader());

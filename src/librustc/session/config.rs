@@ -1397,10 +1397,8 @@ options! {DebuggingOptions, DebuggingSetter, basic_debugging_options,
         "don't interleave execution of lints; allows benchmarking individual lints"),
     crate_attr: Vec<String> = (Vec::new(), parse_string_push, [TRACKED],
         "inject the given attribute in the crate"),
-    self_profile: bool = (false, parse_bool, [UNTRACKED],
-        "run the self profiler"),
-    profile_json: bool = (false, parse_bool, [UNTRACKED],
-        "output a json file with profiler results"),
+    self_profile: bool = (true, parse_bool, [UNTRACKED],
+        "run the self profiler and output the raw event data"),
     emit_stack_sizes: bool = (false, parse_bool, [UNTRACKED],
         "emits a section containing stack size metadata"),
     plt: Option<bool> = (None, parse_opt_bool, [TRACKED],
@@ -2614,7 +2612,7 @@ mod tests {
             };
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, cfg) = build_session_options_and_crate_config(matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             let cfg = build_configuration(&sess, cfg);
             assert!(cfg.contains(&(Symbol::intern("test"), None)));
         });
@@ -2632,7 +2630,7 @@ mod tests {
             };
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, cfg) = build_session_options_and_crate_config(matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             let cfg = build_configuration(&sess, cfg);
             let mut test_items = cfg.iter().filter(|&&(name, _)| name == "test");
             assert!(test_items.next().is_some());
@@ -2646,7 +2644,7 @@ mod tests {
             let matches = optgroups().parse(&["-Awarnings".to_string()]).unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(!sess.diagnostic().flags.can_emit_warnings);
         });
 
@@ -2656,7 +2654,7 @@ mod tests {
                 .unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(sess.diagnostic().flags.can_emit_warnings);
         });
 
@@ -2664,7 +2662,7 @@ mod tests {
             let matches = optgroups().parse(&["-Adead_code".to_string()]).unwrap();
             let registry = errors::registry::Registry::new(&[]);
             let (sessopts, _) = build_session_options_and_crate_config(&matches);
-            let sess = build_session(sessopts, None, registry);
+            let sess = build_session(sessopts, None, None, registry);
             assert!(sess.diagnostic().flags.can_emit_warnings);
         });
     }

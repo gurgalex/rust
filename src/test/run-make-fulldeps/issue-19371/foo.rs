@@ -44,7 +44,7 @@ fn main() {
 
 fn basic_sess(opts: Options) -> (Session, Rc<CStore>, Box<CodegenBackend>) {
     let descriptions = Registry::new(&rustc::DIAGNOSTICS);
-    let sess = build_session(opts, None, descriptions);
+    let sess = build_session(opts, None, None, descriptions);
     let codegen_backend = rustc_driver::get_codegen_backend(&sess);
     let cstore = Rc::new(CStore::new(codegen_backend.metadata_loader()));
     rustc_lint::register_builtins(&mut sess.lint_store.borrow_mut(), Some(&sess));
